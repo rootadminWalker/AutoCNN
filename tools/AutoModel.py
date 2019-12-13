@@ -102,7 +102,7 @@ class AutoModel(object):
 
     def show_history(self, accuracy_path=None, loss_path=None):
         history = self.history.history
-        print(history)
+
         if "accuracy" in history:
             acc = history["accuracy"]
         else:
