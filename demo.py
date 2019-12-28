@@ -17,6 +17,7 @@ for name in os.listdir(directory):
     image = cv2.resize(frame, (100, 100))
     image = image.reshape(1, 100, 100, 3)
     image = image.astype(np.float32)
+    image = image / 255
 
     predicts = model.predict(image)
 
