@@ -1,8 +1,9 @@
-from keras.applications import VGG16
-from keras import *
-from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import plot_model
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras import *
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.utils import plot_model
 import matplotlib.pyplot as plt
+import os
 # from keras.utils import multi_gpu_model
 
 
@@ -90,6 +91,9 @@ class AutoModel(object):
         )
 
         if save_path is not None:
+            if not os.path.exists(os.path.dirname(save_path)):
+                os.mkdir(os.path.dirname(save_path))
+
             self.model.save(save_path)
 
             name = ".".join(save_path.split(".")[:-1])
