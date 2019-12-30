@@ -69,7 +69,7 @@ class AutoModel(object):
 
         self.model.compile(
             loss=losses.categorical_crossentropy,
-            optimizer=optimizers.RMSprop(lr=1e-4),
+            optimizer=optimizers.RMSprop(lr=1e-5),
             metrics=["accuracy"]
         )
 
