@@ -61,21 +61,22 @@ class AutoModel(object):
         self.model = models.Model(input_layer, output_layer)
         self.model.summary()
 
+    def train(self, epochs=10, fine_tune=0, save_path=None):
+        train_steps = self.train_generator.samples // self.train_generator.batch_size
+        valid_steps = None
+        if self.valid_generator is not None:
+            valid_steps = self.valid_generator.samples // self.valid_generator.batch_size
+
         self.model.compile(
             loss=losses.categorical_crossentropy,
             optimizer=optimizers.RMSprop(lr=1e-4),
             metrics=["accuracy"]
         )
 
-    def train(self, epochs=10, save_path=None):
-        train_steps = self.train_generator.samples // self.train_generator.batch_size
-        valid_steps = None
-        if self.valid_generator is not None:
-            valid_steps = self.valid_generator.samples // self.valid_generator.batch_size
-
         history1 = self.model.fit_generator(
             self.train_generator,
             steps_per_epoch=train_steps,
+            initial_epoch=0,
             epochs=epochs,
             validation_data=self.valid_generator,
             validation_steps=valid_steps,
@@ -85,18 +86,25 @@ class AutoModel(object):
         for layer in self.model.layers:
             layer.trainable = True
 
+        self.model.compile(
+            loss=losses.categorical_crossentropy,
+            optimizer=optimizers.RMSprop(lr=1e-6),
+            metrics=["accuracy"]
+        )
+
         history2 = self.model.fit_generator(
             self.train_generator,
             steps_per_epoch=train_steps,
             initial_epoch=epochs,
-            epochs=epochs * 2,
+            epochs=epochs + fine_tune,
             validation_data=self.valid_generator,
             validation_steps=valid_steps,
             verbose=1
         )
 
         self.history = history1.history
-        self.history.update(history2.history)
+        for key, val in self.history.items():
+            self.history[key] += history2.history[key]
 
         if save_path is not None:
             if not os.path.exists(os.path.dirname(save_path)):
@@ -149,6 +157,6 @@ class AutoModel(object):
 
 
 if __name__ == "__main__":
-    _model = AutoModel("../../datasets/dogs_vs_cats/train/")
-    _model.train(1, "../model_data/model.h5")
-    _model.show_history("../model_data/acc.png", "../model_data/loss.png")
+    _model = AutoModel("../dataset/train/")
+    _model.train(epochs=50, fine_tune=50, save_path="../model_data/model.h5")
+    _model.show_history("../model_data/history/acc.png", "../model_data/history/loss.png")
