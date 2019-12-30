@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 
-model = vgg16.VGG16(weights="imagenet", include_top=True)
+model = vgg16.VGG16(weights="imagenet")
 
 camera = cv2.VideoCapture(0)
 while camera.isOpened():
