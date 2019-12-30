@@ -1,5 +1,7 @@
 # AutoCNN
 
+![image](https://github.com/supercatex/AutoCNN/blob/master/images/sample.PNG)
+
 ### 1. Setup Guide
 * numpy
 * tensorflow-gpu>=2.0.0
