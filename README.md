@@ -1,6 +1,6 @@
 # AutoCNN
 
-![image](https://github.com/supercatex/AutoCNN/blob/master/images/sample.PNG)
+![image](https://github.com/supercatex/AutoCNN/blob/master/images/sample.png)
 
 ### 1. Setup Guide
 * numpy
