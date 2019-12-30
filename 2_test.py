@@ -5,8 +5,10 @@ import os
 
 
 model = load_model("model_data/model.h5")
+label = []
 f = open("model_data/model.txt")
-labels = f.readlines()
+for line in f.readlines():
+    label.append(line.strip())
 f.close()
 
 directory = "dataset/test"
@@ -24,6 +26,7 @@ for name in os.listdir(directory):
 
     idx = np.argmax(predicts)
 
-    print(idx, labels[idx])
+    print(idx, label[idx])
+    cv2.putText(frame, label [idx], (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 3)
     cv2.imshow("frame", frame)
     cv2.waitKey(0)
