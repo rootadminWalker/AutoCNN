@@ -9,7 +9,7 @@ f = open("model_data/model.txt")
 labels = f.readlines()
 f.close()
 
-directory = "../datasets/dogs-vs-cats/test1/"
+directory = "dataset/test"
 for name in os.listdir(directory):
     path = os.path.join(directory, name)
 
