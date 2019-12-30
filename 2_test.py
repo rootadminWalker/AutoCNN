@@ -14,7 +14,8 @@ for name in os.listdir(directory):
     path = os.path.join(directory, name)
 
     frame = cv2.imread(path, cv2.IMREAD_COLOR)
-    image = cv2.resize(frame, (100, 100))
+    image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    image = cv2.resize(image, (100, 100))
     image = image.reshape(1, 100, 100, 3)
     image = image.astype(np.float32)
     image = image / 255
