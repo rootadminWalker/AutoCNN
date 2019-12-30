@@ -2,6 +2,6 @@ numpy
 tensorflow-gpu>=2.0.0
 matplotlib
 Pillow
-opencv-python
 scipy
-pydot
+pydotplus
+opencv-python
