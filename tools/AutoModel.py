@@ -4,11 +4,10 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.utils import plot_model
 import matplotlib.pyplot as plt
 import os
-# from keras.utils import multi_gpu_model
 
 
 class AutoModel(object):
-    def __init__(self, train_path, valid_path=None, image_shape=(100, 100, 3), num_of_trainable_layer=4, batch_size=128):
+    def __init__(self, train_path, valid_path=None, image_shape=(100, 100, 3), num_of_trainable_layer=4, batch_size=32):
         self.train_path = train_path
         self.valid_path = valid_path
         self.image_shape = image_shape
@@ -68,20 +67,13 @@ class AutoModel(object):
             metrics=["accuracy"]
         )
 
-        # self.multi_model = multi_gpu_model(self.model, gpus=2)
-        # self.multi_model.compile(
-        #     loss=losses.categorical_crossentropy,
-        #     optimizer=optimizers.RMSprop(lr=1e-4),
-        #     metrics=["accuracy"]
-        # )
-
     def train(self, epochs=10, save_path=None):
         train_steps = self.train_generator.samples // self.train_generator.batch_size
         valid_steps = None
         if self.valid_generator is not None:
             valid_steps = self.valid_generator.samples // self.valid_generator.batch_size
 
-        self.history = self.model.fit_generator(
+        history1 = self.model.fit_generator(
             self.train_generator,
             steps_per_epoch=train_steps,
             epochs=epochs,
@@ -89,6 +81,22 @@ class AutoModel(object):
             validation_steps=valid_steps,
             verbose=1
         )
+
+        for layer in self.model.layers:
+            layer.trainable = True
+
+        history2 = self.model.fit_generator(
+            self.train_generator,
+            steps_per_epoch=train_steps,
+            initial_epoch=epochs,
+            epochs=epochs * 2,
+            validation_data=self.valid_generator,
+            validation_steps=valid_steps,
+            verbose=1
+        )
+
+        self.history = history1.history
+        self.history.update(history2.history)
 
         if save_path is not None:
             if not os.path.exists(os.path.dirname(save_path)):
@@ -105,7 +113,7 @@ class AutoModel(object):
             plot_model(self.model, name + ".png", show_shapes=True, show_layer_names=True)
 
     def show_history(self, accuracy_path=None, loss_path=None):
-        history = self.history.history
+        history = self.history
 
         if "accuracy" in history:
             acc = history["accuracy"]
@@ -122,6 +130,8 @@ class AutoModel(object):
         plt.legend()
 
         if accuracy_path is not None:
+            if not os.path.exists(os.path.dirname(accuracy_path)):
+                os.mkdir(os.path.dirname(accuracy_path))
             plt.savefig(accuracy_path)
 
         plt.figure()
@@ -132,6 +142,8 @@ class AutoModel(object):
         plt.legend()
 
         if loss_path is not None:
+            if not os.path.exists(os.path.dirname(loss_path)):
+                os.mkdir(os.path.dirname(loss_path))
             plt.savefig(loss_path)
         plt.show()
 
