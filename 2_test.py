@@ -27,6 +27,6 @@ for name in os.listdir(directory):
     idx = np.argmax(predicts)
 
     print(idx, label[idx])
-    cv2.putText(frame, label [idx], (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 3)
+    cv2.putText(frame, label[idx], (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 3)
     cv2.imshow("frame", frame)
     cv2.waitKey(0)
