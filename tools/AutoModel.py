@@ -1,16 +1,17 @@
-from tensorflow.keras.applications import VGG16
-from tensorflow.keras import *
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.utils import plot_model
+from tensorflow.python.keras.applications import ResNet50
+from tensorflow.python.keras import *
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.utils import plot_model
 import matplotlib.pyplot as plt
 import os
 
 
 class AutoModel(object):
-    def __init__(self, train_path, valid_path=None, image_shape=(100, 100, 3), num_of_trainable_layer=4, batch_size=32):
+    def __init__(self, train_path, valid_path=None, generate_image=True, image_shape=(100, 100, 3), num_of_trainable_layer=4, batch_size=32):
         self.train_path = train_path
         self.valid_path = valid_path
         self.image_shape = image_shape
+        self.generate_image = generate_image
         self.batch_size = batch_size
         self.history = None
         self.model = None
@@ -20,7 +21,17 @@ class AutoModel(object):
         self.valid_data_gen = None
         self.valid_generator = None
 
-        model = VGG16(
+        self.generator_params = dict(
+            rescale=1.0 / 255,
+            rotation_range=20,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            horizontal_flip=True,
+            fill_mode="nearest",
+            validation_split=0.2
+        )
+
+        model = ResNet50(
             include_top=False,
             weights="imagenet",
             input_shape=self.image_shape
@@ -28,14 +39,11 @@ class AutoModel(object):
         for layer in model.layers[:-num_of_trainable_layer]:
             layer.trainable = False
 
-        self.train_data_gen = ImageDataGenerator(
-            rescale=1.0/255,
-            rotation_range=20,
-            width_shift_range=0.2,
-            height_shift_range=0.2,
-            horizontal_flip=True,
-            fill_mode="nearest"
-        )
+        if self.generate_image:
+            self.train_data_gen = ImageDataGenerator(**self.generator_params)
+        else:
+            self.train_data_gen = ImageDataGenerator()
+
         self.train_generator = self.train_data_gen.flow_from_directory(
             self.train_path,
             target_size=self.image_shape[:2],
@@ -69,7 +77,7 @@ class AutoModel(object):
 
         self.model.compile(
             loss=losses.categorical_crossentropy,
-            optimizer=optimizers.RMSprop(lr=1e-5),
+            optimizer=optimizers.Adam(lr=1e-1),
             metrics=["accuracy"]
         )
 
