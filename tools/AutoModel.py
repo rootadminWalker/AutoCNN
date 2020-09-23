@@ -1,4 +1,4 @@
-from tensorflow.python.keras.applications import ResNet50
+import tensorflow.python.keras.applications as keras.applications
 from tensorflow.python.keras import *
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils import plot_model
@@ -31,7 +31,7 @@ class AutoModel(object):
             validation_split=0.2
         )
 
-        model = ResNet50(
+        model = keras.applications.ResNet50(
             include_top=False,
             weights="imagenet",
             input_shape=self.image_shape
