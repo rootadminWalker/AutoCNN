@@ -1,13 +1,21 @@
-import tensorflow.python.keras.applications as keras.applications
-from tensorflow.python.keras import *
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.python.keras.utils import plot_model
+import tensorflow.keras.applications as keras_applications
+from tensorflow.keras import *
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.utils import plot_model
 import matplotlib.pyplot as plt
 import os
 
 
 class AutoModel(object):
-    def __init__(self, train_path, valid_path=None, generate_image=True, image_shape=(100, 100, 3), num_of_trainable_layer=4, batch_size=32):
+    def __init__(
+            self, train_path,
+            valid_path=None,
+            generate_image=True,
+            image_shape=(100, 100, 3),
+            num_of_trainable_layer=4,
+            batch_size=32,
+            model_function=keras_applications.vgg16.VGG16
+    ):
         self.train_path = train_path
         self.valid_path = valid_path
         self.image_shape = image_shape
@@ -28,14 +36,15 @@ class AutoModel(object):
             height_shift_range=0.2,
             horizontal_flip=True,
             fill_mode="nearest",
-            validation_split=0.2
+            validation_split=0.2,
         )
 
-        model = keras.applications.ResNet50(
+        model = model_function(
             include_top=False,
             weights="imagenet",
             input_shape=self.image_shape
         )
+
         for layer in model.layers[:-num_of_trainable_layer]:
             layer.trainable = False
 
@@ -49,18 +58,20 @@ class AutoModel(object):
             target_size=self.image_shape[:2],
             batch_size=self.batch_size,
             class_mode="categorical",
+            subset='training',
             shuffle=True
         )
 
-        if self.valid_path is not None:
-            self.valid_data_gen = ImageDataGenerator(rescale=1.0/255)
-            self.valid_generator = self.valid_data_gen.flow_from_directory(
-                self.valid_path,
-                target_size=self.image_shape[:2],
-                batch_size=self.batch_size,
-                class_mode="categorical",
-                shuffle=False
-            )
+        # if self.valid_path is not None:
+        # self.valid_data_gen = ImageDataGenerator(rescale=1.0/255)
+        self.valid_generator = self.train_data_gen.flow_from_directory(
+            self.train_path,
+            target_size=self.image_shape[:2],
+            batch_size=self.batch_size,
+            class_mode="categorical",
+            subset='validation',
+            shuffle=False
+        )
 
         input_layer = layers.Input(shape=self.image_shape, name="Input_Layer")
         x = model(input_layer)
@@ -69,7 +80,7 @@ class AutoModel(object):
         self.model = models.Model(input_layer, output_layer)
         self.model.summary()
 
-    def train(self, epochs=10, fine_tune=0, save_path=None):
+    def train(self, epochs=10, fine_tune=0, transfer_lr=1e-5, fine_tune_lr=1e-6, save_path=None):
         train_steps = self.train_generator.samples // self.train_generator.batch_size
         valid_steps = None
         if self.valid_generator is not None:
@@ -77,11 +88,11 @@ class AutoModel(object):
 
         self.model.compile(
             loss=losses.categorical_crossentropy,
-            optimizer=optimizers.Adam(lr=1e-1),
+            optimizer=optimizers.Adam(lr=transfer_lr),
             metrics=["accuracy"]
         )
 
-        history1 = self.model.fit_generator(
+        history1 = self.model.fit(
             self.train_generator,
             steps_per_epoch=train_steps,
             initial_epoch=0,
@@ -96,11 +107,11 @@ class AutoModel(object):
 
         self.model.compile(
             loss=losses.categorical_crossentropy,
-            optimizer=optimizers.RMSprop(lr=1e-6),
+            optimizer=optimizers.RMSprop(lr=fine_tune),
             metrics=["accuracy"]
         )
 
-        history2 = self.model.fit_generator(
+        history2 = self.model.fit(
             self.train_generator,
             steps_per_epoch=train_steps,
             initial_epoch=epochs,
